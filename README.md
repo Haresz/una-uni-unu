@@ -45,6 +45,7 @@ npm run dev      # http://localhost:5173
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run typecheck` | Type-check only |
 | `npm run sfx:placeholders` | Regenerate the placeholder sound files |
+| `npm run gen:favicons` | Regenerate PNG/ICO app icons from `public/favicon.svg` |
 
 ## Project structure
 
@@ -63,6 +64,19 @@ public/sounds/   Sound effect files (replaceable)
 The engine is completely decoupled from React: `reduce(state, action)` returns
 the next state plus a list of `GameEvent`s. The UI, the animation queue and the
 sound layer each subscribe to those events independently.
+
+## App icon
+
+`public/favicon.svg` is the source of truth — the four-colour wild emblem on a
+felt tile. Rasterized fallbacks (`favicon.ico`, `favicon-16/32/48.png`,
+`apple-touch-icon.png`, `icon-192/512.png`) and the web app manifest are
+generated from it:
+
+```bash
+npm run gen:favicons
+```
+
+Edit the SVG, re-run the script, and every icon updates.
 
 ## Sound effects
 
