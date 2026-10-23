@@ -1,3 +1,9 @@
+/**
+ * Deck construction and dealing.
+ *
+ * Builds the canonical 108-card deck, shuffles it with the shared PRNG, and
+ * deals round-robin so the UI can stagger the opening animation.
+ */
 import type { Card, CardColor, CardKind } from './types';
 import { seedFromNumber, shuffle, type RngState } from './prng';
 

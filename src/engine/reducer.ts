@@ -1,3 +1,11 @@
+/**
+ * The reducer: the single source of truth for game rules.
+ *
+ * `reduce(state, action)` returns a NEW state plus a list of `events`
+ * describing what changed. It is pure and deterministic (all randomness comes
+ * from `state.rng`), so a whole game can be replayed and tested outside the
+ * browser. If you want to change a rule, this is almost always the file to open.
+ */
 import type {
   Card,
   Direction,
@@ -284,11 +292,13 @@ function handlePlayCard(
   action: Extract<GameAction, { type: 'PLAY_CARD' }>,
   events: GameEvent[],
 ): void {
+  console.log('handlePlayCard', action);
   const player = getPlayer(s, action.playerId);
   if (!player || s.players[s.currentPlayerIndex]!.id !== player.id) return;
   const cardIndex = player.hand.findIndex((card) => card.id === action.cardId);
   if (cardIndex < 0) return;
   const card = player.hand[cardIndex]!;
+  console.log("Is playable:", isPlayable(s, card));
   if (!isPlayable(s, card)) return;
   if (isWild(card) && !action.chosenColor) return;
 

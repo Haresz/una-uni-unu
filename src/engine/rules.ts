@@ -1,3 +1,9 @@
+/**
+ * Pure rule helpers: "is this card playable?", turn maths, colour counting.
+ *
+ * Nothing here mutates state, and both the reducer and the bot call these
+ * functions, so the human and the AI obey exactly the same rules.
+ */
 import type { Card, CardColor, GameState, Player } from './types';
 
 export function isWild(card: Card): boolean {

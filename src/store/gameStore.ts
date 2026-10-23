@@ -1,3 +1,10 @@
+/**
+ * The game store (Zustand): the bridge between the pure engine and React.
+ *
+ * Components never call `reduce` directly. They call store actions, which
+ * dispatch to the engine, save the new state, and publish the resulting events
+ * (with a bumped `eventBatchId`) for the animation and sound hooks to consume.
+ */
 import { create } from 'zustand';
 import {
   createMenuState,

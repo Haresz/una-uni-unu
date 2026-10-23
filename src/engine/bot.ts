@@ -1,3 +1,10 @@
+/**
+ * Bot strategy. Pure decision-making only: `chooseBotAction` returns the next
+ * action, while pacing (thinking delays) lives in the UI driver hook.
+ *
+ * Randomness is passed in as plain numbers so the bot stays deterministic and
+ * easy to test.
+ */
 import type { Card, CardColor, GameAction, GameState } from './types';
 import { currentPlayer, getPlayableCards, isPlayable, isWild, mostCommonColor } from './rules';
 

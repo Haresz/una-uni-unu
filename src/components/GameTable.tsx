@@ -1,3 +1,10 @@
+/**
+ * GameTable: the visual layout of a round.
+ *
+ * Positions the bot seats, the central piles, and the player area. It receives
+ * everything it needs as props (playable ids, selection, flags) and knows
+ * nothing about the rules themselves.
+ */
 import type { GameState, Player } from '../engine/types';
 import { playSound } from '../audio/soundManager';
 import { setAnchor } from '../animation/anchors';

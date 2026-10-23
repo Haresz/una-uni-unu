@@ -1,3 +1,10 @@
+/**
+ * The game driver: everything that happens *without* a human click.
+ *
+ * Runs bot turns with a random thinking delay, lets bots remember UNO, lets
+ * them catch a forgetful human, and auto-passes an unplayable drawn card. It
+ * waits for animations to finish so a fast bot never hides a play.
+ */
 import { useEffect } from 'react';
 import {
   chooseBotAction,

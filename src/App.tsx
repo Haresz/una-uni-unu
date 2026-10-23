@@ -1,3 +1,10 @@
+/**
+ * App: composition root.
+ *
+ * Picks the screen (menu / table / win), mounts the three effect hooks
+ * (driver, animation queue, sound), and wires store actions to the table's
+ * callbacks. No game rules live here.
+ */
 import { useMemo } from 'react';
 import { playSound } from './audio/soundManager';
 import { AnimationLayer } from './components/AnimationLayer';
