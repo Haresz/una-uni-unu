@@ -8,3 +8,4 @@ coverage
 .vercel
 npm-debug.log*
 docs
+plans
