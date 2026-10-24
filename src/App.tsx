@@ -59,7 +59,7 @@ export default function App() {
     : undefined;
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-[100dvh] w-full overflow-hidden">
       <AnimationLayer />
       <GameTable
         state={state}
@@ -77,7 +77,7 @@ export default function App() {
         onCatchUno={catchUno}
       />
 
-      <div className="absolute right-3 top-3 z-[46] flex items-center gap-2">
+      <div className="absolute right-2 top-2 z-[60] flex items-center gap-1.5 sm:right-3 sm:top-3 sm:gap-2">
         <AudioControls />
         <button
           type="button"
@@ -85,7 +85,7 @@ export default function App() {
             playSound('click');
             goToMenu();
           }}
-          className="rounded-full bg-black/40 px-3 py-1.5 text-xs font-bold text-white ring-1 ring-white/20 hover:bg-black/60"
+          className="rounded-full bg-black/40 px-2.5 py-1.5 text-xs font-bold text-white ring-1 ring-white/20 hover:bg-black/60 min-h-[40px] min-w-[40px] sm:px-3"
         >
           Menu
         </button>

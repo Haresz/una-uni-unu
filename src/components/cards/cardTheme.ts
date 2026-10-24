@@ -3,7 +3,7 @@ import type { CardColor } from '../../engine/types';
 export type CardSize = 'xs' | 'sm' | 'md' | 'lg';
 
 export const CARD_SIZE_PX: Record<CardSize, { w: number; h: number }> = {
-  xs: { w: 30, h: 45 },
+  xs: { w: 46, h: 69 },
   sm: { w: 46, h: 69 },
   md: { w: 64, h: 96 },
   lg: { w: 88, h: 132 },

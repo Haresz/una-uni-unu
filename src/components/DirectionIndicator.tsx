@@ -3,10 +3,43 @@ import type { Direction } from '../engine/types';
 export interface DirectionIndicatorProps {
   direction: Direction;
   className?: string;
+  mobile?: boolean;
 }
 
 /** Rotating arrow that shows which way play is travelling. */
-export function DirectionIndicator({ direction, className = '' }: DirectionIndicatorProps) {
+export function DirectionIndicator({ direction, className = '', mobile = false }: DirectionIndicatorProps) {
+  if (mobile) {
+    return (
+      <div className={`flex items-center justify-center text-emerald-100/80 ${className}`}>
+        <svg
+          viewBox="0 0 48 48"
+          className="h-6 w-6"
+          style={{ transform: direction === -1 ? 'scaleX(-1)' : undefined }}
+          aria-label={direction === 1 ? 'Clockwise' : 'Counterclockwise'}
+        >
+          <circle
+            cx={24}
+            cy={24}
+            r={16}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeDasharray="4 5"
+            opacity={0.45}
+          />
+          <path
+            d="M24 7 A 17 17 0 0 1 41 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          <path d="M41 24 L34.5 19 L34.5 29 Z" fill="currentColor" />
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex flex-col items-center gap-1 text-emerald-100/80 ${className}`}>
       <svg

@@ -48,3 +48,24 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Mobile layout variables */
+@media (max-width: 480px) {
+  :root {
+    --side-strip-w: clamp(24px, 7vw, 36px);
+  }
+}
+
+@media (max-height: 700px) {
+  :root {
+    --card-h-scale: 0.85;
+  }
+}
+
+/* Ensure dvh support */
+html,
+body,
+#root {
+  height: 100%;
+  height: 100dvh;
+}

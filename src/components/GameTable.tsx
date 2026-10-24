@@ -42,9 +42,9 @@ function seatPositions(botCount: number): SeatPosition[] {
 }
 
 const POSITION_CLASS: Record<SeatPosition, string> = {
-  top: 'absolute left-1/2 top-4 -translate-x-1/2',
-  left: 'absolute left-2 top-1/2 -translate-y-1/2 sm:left-6',
-  right: 'absolute right-2 top-1/2 -translate-y-1/2 sm:right-6',
+  top: 'absolute left-1/2 top-4 -translate-x-1/2 max-md:static max-md:translate-x-0',
+  left: 'absolute left-2 top-1/2 -translate-y-1/2 sm:left-6 max-md:static max-md:translate-y-0',
+  right: 'absolute right-2 top-1/2 -translate-y-1/2 sm:right-6 max-md:static max-md:translate-y-0',
 };
 
 export function GameTable({
@@ -73,48 +73,153 @@ export function GameTable({
 
   return (
     <div
-      className={`felt-texture relative flex h-full w-full flex-col overflow-hidden ${className}`}
+      className={`felt-texture relative grid h-[100dvh] w-full grid-rows-[auto_1fr_auto] overflow-hidden ${className}`}
     >
-      {/* Opponents */}
-      {bots.map((bot, index) => (
-        <div
-          key={bot.id}
-          ref={(el) => setAnchor(`seat:${bot.id}`, el)}
-          className={POSITION_CLASS[positions[index] ?? 'top']}
-        >
-          <OpponentZone
-            name={bot.name}
-            count={bot.hand.length}
-            position={positions[index] ?? 'top'}
-            isTurn={currentPlayer.id === bot.id}
-            thinking={thinkingPlayerId === bot.id}
-          />
-        </div>
-      ))}
+      {/* Header spacer for menu/audio */}
+      <div className="h-12 w-full sm:h-14" />
 
-      {/* Centre of the table */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4">
-        <TurnBadge
-          text={isHumanTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}
-          tone={isHumanTurn ? 'you' : 'bot'}
-          pulse={!isHumanTurn}
-        />
-        <TablePiles
-          drawCount={state.drawPile.length}
-          discardStack={state.discardPile}
-          activeColor={state.activeColor}
-          pendingDraw={state.pendingDraw}
-        />
-        <DirectionIndicator direction={state.direction} />
+      {/* Table area */}
+      <div className="relative flex min-h-0 w-full items-center justify-center">
+        {/* Opponents - desktop absolute positioning, mobile in grid */}
+        {bots.map((bot, index) => {
+          const pos = positions[index] ?? 'top';
+          // On mobile, render differently via CSS
+          return (
+            <div
+              key={bot.id}
+              ref={(el) => setAnchor(`seat:${bot.id}`, el)}
+              className={`${POSITION_CLASS[pos]} hidden sm:block`}
+            >
+              <OpponentZone
+                name={bot.name}
+                count={bot.hand.length}
+                position={pos}
+                isTurn={currentPlayer.id === bot.id}
+                thinking={thinkingPlayerId === bot.id}
+              />
+            </div>
+          );
+        })}
+
+        {/* Mobile layout: grid with side strips */}
+        <div className="grid h-full w-full grid-cols-[var(--side-strip-w,28px)_1fr_var(--side-strip-w,28px)] items-center sm:hidden">
+          {/* Left strip */}
+          <div className="flex h-full items-center justify-center">
+            {bots.map((bot, index) => {
+              const pos = positions[index] ?? 'top';
+              if (pos !== 'left') return null;
+              return (
+                <div
+                  key={bot.id}
+                  ref={(el) => setAnchor(`seat:${bot.id}`, el)}
+                  className="w-full"
+                >
+                  <OpponentZone
+                    name={bot.name}
+                    count={bot.hand.length}
+                    position={pos}
+                    isTurn={currentPlayer.id === bot.id}
+                    thinking={thinkingPlayerId === bot.id}
+                    mobile
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Center */}
+          <div className="relative flex h-full flex-col items-center justify-center gap-2">
+            {/* Top bot if exists */}
+            {bots.map((bot, index) => {
+              const pos = positions[index] ?? 'top';
+              if (pos !== 'top') return null;
+              return (
+                <div
+                  key={bot.id}
+                  ref={(el) => setAnchor(`seat:${bot.id}`, el)}
+                  className="mb-2"
+                >
+                  <OpponentZone
+                    name={bot.name}
+                    count={bot.hand.length}
+                    position={pos}
+                    isTurn={currentPlayer.id === bot.id}
+                    thinking={thinkingPlayerId === bot.id}
+                    mobile
+                  />
+                </div>
+              );
+            })}
+
+            <TurnBadge
+              text={isHumanTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}
+              tone={isHumanTurn ? 'you' : 'bot'}
+              pulse={!isHumanTurn}
+              className="scale-90"
+            />
+            <TablePiles
+              drawCount={state.drawPile.length}
+              discardStack={state.discardPile}
+              activeColor={state.activeColor}
+              pendingDraw={state.pendingDraw}
+              mobile
+              canDraw={showDraw && interactive}
+              onDraw={onDraw}
+            />
+            <DirectionIndicator direction={state.direction} mobile />
+          </div>
+
+          {/* Right strip */}
+          <div className="flex h-full items-center justify-center">
+            {bots.map((bot, index) => {
+              const pos = positions[index] ?? 'top';
+              if (pos !== 'right') return null;
+              return (
+                <div
+                  key={bot.id}
+                  ref={(el) => setAnchor(`seat:${bot.id}`, el)}
+                  className="w-full"
+                >
+                  <OpponentZone
+                    name={bot.name}
+                    count={bot.hand.length}
+                    position={pos}
+                    isTurn={currentPlayer.id === bot.id}
+                    thinking={thinkingPlayerId === bot.id}
+                    mobile
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Centre of the table - desktop */}
+        <div className="pointer-events-none absolute inset-0 hidden flex-col items-center justify-center gap-4 sm:flex">
+          <TurnBadge
+            text={isHumanTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}
+            tone={isHumanTurn ? 'you' : 'bot'}
+            pulse={!isHumanTurn}
+          />
+          <TablePiles
+            drawCount={state.drawPile.length}
+            discardStack={state.discardPile}
+            activeColor={state.activeColor}
+            pendingDraw={state.pendingDraw}
+            mobile={false}
+            canDraw={false}
+          />
+          <DirectionIndicator direction={state.direction} mobile={false} />
+        </div>
       </div>
 
       {/* Toasts */}
-      <ToastStack items={toasts} className="absolute left-1/2 top-2 z-40 -translate-x-1/2" />
+      <ToastStack items={toasts} className="absolute left-1/2 top-14 z-40 -translate-x-1/2 sm:top-16" />
 
       {/* Player area */}
-      <div className="relative z-30 mt-auto flex flex-col items-center">
+      <div className="relative z-30 flex flex-col items-center pb-[env(safe-area-inset-bottom,4px)]">
         <div className="mb-1 flex flex-wrap items-center justify-center gap-2">
-          <TurnBadge text="You" tone={isHumanTurn ? 'you' : 'neutral'} />
+          <TurnBadge text="You" tone={isHumanTurn ? 'you' : 'neutral'} className="hidden sm:inline-flex" />
           {catchTargets.map((targetId) => {
             const target = state.players.find((player) => player.id === targetId);
             if (!target) return null;
@@ -125,11 +230,12 @@ export function GameTable({
                 onClick={
                   onCatchUno
                     ? () => {
-                        playSound('click');
-                        onCatchUno(targetId);
-                      }
+                      playSound('click');
+                      onCatchUno(targetId);
+                    }
                     : undefined
                 }
+                className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-lg"
               >
                 Catch {target.name}!
               </UnoButton>
@@ -142,7 +248,7 @@ export function GameTable({
                 playSound('click');
                 onDraw?.();
               }}
-              className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/25"
+              className="rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/25 min-h-[44px] min-w-[44px]"
             >
               Draw
             </button>
@@ -165,11 +271,12 @@ export function GameTable({
             onClick={
               onCallUno
                 ? () => {
-                    playSound('click');
-                    onCallUno();
-                  }
+                  playSound('click');
+                  onCallUno();
+                }
                 : undefined
             }
+            className="min-h-[44px] min-w-[44px] px-4 py-2 text-base sm:px-6 sm:py-3 sm:text-lg"
           />
         </div>
         <PlayerHand
@@ -180,9 +287,9 @@ export function GameTable({
           onSelect={
             onSelectCard
               ? (cardId) => {
-                  playSound('click');
-                  onSelectCard(cardId);
-                }
+                playSound('click');
+                onSelectCard(cardId);
+              }
               : undefined
           }
         />

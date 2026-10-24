@@ -32,7 +32,8 @@ export function PlayerHand({
   return (
     <div
       ref={handRef}
-      className="relative flex h-[186px] w-full items-end justify-center overflow-x-auto overflow-y-visible px-2"
+      className="relative flex h-[120px] w-full items-end justify-center overflow-x-auto overflow-y-visible px-2 pb-[env(safe-area-inset-bottom,6px)] sm:h-[186px] snap-x snap-mandatory"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div className="relative flex h-full min-w-max items-end justify-center">
         {cards.map((card, index) => {
@@ -46,7 +47,7 @@ export function PlayerHand({
           return (
             <div
               key={card.id}
-              className="absolute bottom-0 transition-transform duration-200 ease-out"
+              className="absolute bottom-0 snap-start transition-transform duration-200 ease-out"
               style={{
                 transform: `translateX(${x}px) translateY(${selected ? -30 : dip}px) rotate(${rotation}deg)`,
                 transformOrigin: '50% 160%',

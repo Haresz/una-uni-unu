@@ -23,7 +23,7 @@ export function UnoButton({
       onClick={onClick}
       disabled={disabled}
       className={[
-        'select-none rounded-full px-6 py-3 text-lg font-black uppercase italic tracking-wide',
+        'select-none rounded-full px-4 py-2 text-base font-black uppercase italic tracking-wide min-h-[44px] min-w-[44px]',
         'shadow-[0_8px_0_rgba(0,0,0,0.35)] transition active:translate-y-0.5 active:shadow-[0_4px_0_rgba(0,0,0,0.35)]',
         'disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none',
         isCatch

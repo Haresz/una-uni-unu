@@ -3,6 +3,7 @@ import type { Card as CardModel, CardColor } from '../engine/types';
 import { setAnchor } from '../animation/anchors';
 import { CARD_COLOR_VAR } from './cards/cardTheme';
 import { CardView } from './cards/Card';
+import { playSound } from '../audio/soundManager';
 
 export interface TablePilesProps {
   drawCount: number;
@@ -12,15 +13,114 @@ export interface TablePilesProps {
   activeColor: CardColor;
   /** Optional stack chain counter shown over the draw pile. */
   pendingDraw?: number;
+  mobile?: boolean;
+  canDraw?: boolean;
+  onDraw?: () => void;
 }
 
-export function TablePiles({ drawCount, discardStack, activeColor, pendingDraw = 0 }: TablePilesProps) {
+export function TablePiles({ drawCount, discardStack, activeColor, pendingDraw = 0, mobile = false, canDraw = false, onDraw }: TablePilesProps) {
   const top = discardStack[discardStack.length - 1] ?? null;
   const behind = discardStack.slice(0, -1).slice(-2);
   const glow = CARD_COLOR_VAR[activeColor];
 
-  const drawRef = useCallback((el: HTMLDivElement | null) => setAnchor('draw', el), []);
+  const drawRef = useCallback((el: HTMLDivElement | null) => setAnchor('draw', el as any), []);
   const discardRef = useCallback((el: HTMLDivElement | null) => setAnchor('discard', el), []);
+
+  if (mobile) {
+    const drawSize = 'xs';
+    const discardSize = 'xs';
+
+    return (
+      <div className="flex items-center justify-center gap-6">
+        {/* Draw pile */}
+        <div className="flex flex-col items-center gap-1">
+          {canDraw && onDraw ? (
+            <button
+              type="button"
+              ref={(el) => {
+                setAnchor('draw', el as any);
+              }}
+              onClick={() => {
+                playSound('click');
+                onDraw?.();
+              }}
+              aria-label="Ambil kartu"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  playSound('click');
+                  onDraw?.();
+                }
+              }}
+              className="relative h-[69px] w-[46px] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 rounded-lg animate-pulse"
+            >
+              <div className="absolute inset-0 translate-x-1 translate-y-1 opacity-70">
+                <CardView faceDown size={drawSize} />
+              </div>
+              <div className="absolute inset-0 translate-x-0.5 translate-y-0.5 opacity-90">
+                <CardView faceDown size={drawSize} />
+              </div>
+              <div className="absolute inset-0">
+                <CardView faceDown size={drawSize} />
+              </div>
+              {drawCount > 0 && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white ring-1 ring-white/20">
+                  {drawCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <div ref={(el) => setAnchor('draw', el as any)} className="relative h-[69px] w-[46px]">
+              <div className="absolute inset-0 translate-x-1 translate-y-1 opacity-70">
+                <CardView faceDown size={drawSize} />
+              </div>
+              <div className="absolute inset-0 translate-x-0.5 translate-y-0.5 opacity-90">
+                <CardView faceDown size={drawSize} />
+              </div>
+              <div className="absolute inset-0">
+                <CardView faceDown size={drawSize} />
+              </div>
+              {drawCount > 0 && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white ring-1 ring-white/20">
+                  {drawCount}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Discard pile */}
+        <div className="flex flex-col items-center gap-1">
+          <div ref={discardRef} className="relative h-[69px] w-[46px]">
+            <div
+              className="absolute -inset-2 rounded-2xl blur-lg transition-colors duration-500"
+              style={{ backgroundColor: glow, opacity: 0.4 }}
+              aria-hidden
+            />
+            {behind.map((card, index) => (
+              <div
+                key={card.id}
+                className="absolute inset-0"
+                style={{ transform: `rotate(${(index - 1) * 5}deg)` }}
+              >
+                <CardView card={card} dimmed size={discardSize} />
+              </div>
+            ))}
+            {top && (
+              <div className="absolute inset-0">
+                <CardView card={top} highlight size={discardSize} />
+              </div>
+            )}
+            {pendingDraw > 0 && (
+              <span className="absolute -top-2 -right-2 z-10 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-black text-white shadow-lg ring-1 ring-white/70">
+                +{pendingDraw}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center gap-10 sm:gap-16">

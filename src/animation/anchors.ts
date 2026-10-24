@@ -6,8 +6,42 @@
 const anchors = new Map<string, HTMLElement>();
 
 export function setAnchor(key: string, el: HTMLElement | null): void {
-  if (el) anchors.set(key, el);
-  else anchors.delete(key);
+  if (el) {
+    // Don't overwrite existing valid anchor with a hidden/zero-sized element
+    const existing = anchors.get(key);
+    if (existing && existing !== el) {
+      try {
+        const existingRect = existing.getBoundingClientRect();
+        if (existingRect.width > 0 && existingRect.height > 0) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width === 0 && rect.height === 0) {
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0 && anchors.has(key)) {
+        const existing = anchors.get(key)!;
+        try {
+          const existingRect = existing.getBoundingClientRect();
+          if (existingRect.width > 0 && existingRect.height > 0) {
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    } catch {
+      // ignore
+    }
+    anchors.set(key, el);
+  } else {
+    anchors.delete(key);
+  }
 }
 
 export function seatAnchor(playerId: string): string {
@@ -25,11 +59,16 @@ export function getAnchorRect(key: string | null | undefined): AnchorRect | null
   if (!key) return null;
   const el = anchors.get(key);
   if (!el) return null;
-  const rect = el.getBoundingClientRect();
-  return {
-    cx: rect.left + rect.width / 2,
-    cy: rect.top + rect.height / 2,
-    width: rect.width,
-    height: rect.height,
-  };
+  try {
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return null;
+    return {
+      cx: rect.left + rect.width / 2,
+      cy: rect.top + rect.height / 2,
+      width: rect.width,
+      height: rect.height,
+    };
+  } catch {
+    return null;
+  }
 }
