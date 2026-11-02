@@ -140,6 +140,7 @@ function TableCenter({
       <div className="relative flex items-center justify-center">
         <DirectionIndicator
           direction={direction}
+          color={activeColor}
           mobile={mobile}
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         />

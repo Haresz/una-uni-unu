@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { DirectionIndicator } from '../DirectionIndicator';
 import { GameTable } from '../GameTable';
 import { StartMenu } from '../StartMenu';
 import { CardFace } from '../cards/CardFace';
@@ -36,6 +37,23 @@ describe('StartMenu', () => {
     expect(html).toContain('UNA-UNI-UNU');
     expect(html).toContain('Stack Draw Two');
     expect(html).toContain('Play');
+  });
+});
+
+describe('DirectionIndicator', () => {
+  it('uses the active card color and clockwise arrowheads', () => {
+    const html = renderToString(<DirectionIndicator direction={1} color="red" />);
+    expect(html).toContain('Clockwise');
+    expect(html).toContain('#e0483c');
+    expect(html).toContain('M 17.11 38.03 A 35 35 0 0 1 82.89 38.03');
+  });
+
+  it('keeps the active color while reversing the arrowheads', () => {
+    const html = renderToString(<DirectionIndicator direction={-1} color="blue" />);
+    expect(html).toContain('Counterclockwise');
+    expect(html).toContain('ccw');
+    expect(html).toContain('#2f6fdb');
+    expect(html).toContain('M 82.89 38.03 A 35 35 0 0 0 17.11 38.03');
   });
 });
 

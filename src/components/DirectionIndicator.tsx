@@ -1,23 +1,46 @@
 import { useId } from 'react';
-import type { Direction } from '../engine/types';
+import type { CardColor, Direction } from '../engine/types';
+import { COLOR_HEX } from './cards/cardTheme';
 
 export interface DirectionIndicatorProps {
   direction: Direction;
+  color: CardColor;
   className?: string;
   mobile?: boolean;
 }
 
+const ARCS: Record<'cw' | 'ccw', readonly [string, string]> = {
+  cw: [
+    'M 17.11 38.03 A 35 35 0 0 1 82.89 38.03',
+    'M 82.89 61.97 A 35 35 0 0 1 17.11 61.97',
+  ],
+  ccw: [
+    'M 82.89 38.03 A 35 35 0 0 0 17.11 38.03',
+    'M 17.11 61.97 A 35 35 0 0 0 82.89 61.97',
+  ],
+};
+
 /** Rotating arrow that shows which way play is travelling. */
-export function DirectionIndicator({ direction, className = '', mobile = false }: DirectionIndicatorProps) {
+export function DirectionIndicator({
+  direction,
+  color,
+  className = '',
+  mobile = false,
+}: DirectionIndicatorProps) {
   const markerId = `head-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
-  const size = mobile ? 'h-28 w-28' : 'h-[180px] w-[180px]';
+  const size = mobile ? 'h-32 w-32' : 'h-[200px] w-[200px]';
+  const clockwise = direction === 1;
+  const [upperArc, lowerArc] = ARCS[clockwise ? 'cw' : 'ccw'];
 
   return (
-    <div className={`pointer-events-none flex items-center justify-center text-emerald-100/80 ${className}`}>
+    <div
+      className={`pointer-events-none flex items-center justify-center transition-colors duration-300 ${className}`}
+      style={{ color: COLOR_HEX[color] }}
+    >
       <svg
         viewBox="0 0 100 100"
-        className={`direction ${direction === -1 ? 'ccw' : ''} ${size}`}
-        aria-label={direction === 1 ? 'Clockwise' : 'Counterclockwise'}
+        className={`direction ${clockwise ? '' : 'ccw'} ${size}`}
+        aria-label={clockwise ? 'Clockwise' : 'Counterclockwise'}
       >
         <defs>
           <marker
@@ -33,14 +56,8 @@ export function DirectionIndicator({ direction, className = '', mobile = false }
           </marker>
         </defs>
         <g fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
-          <path
-            d="M 17.11 38.03 A 35 35 0 0 1 82.89 38.03"
-            markerEnd={`url(#${markerId})`}
-          />
-          <path
-            d="M 82.89 61.97 A 35 35 0 0 1 17.11 61.97"
-            markerEnd={`url(#${markerId})`}
-          />
+          <path d={upperArc} markerEnd={`url(#${markerId})`} />
+          <path d={lowerArc} markerEnd={`url(#${markerId})`} />
         </g>
       </svg>
     </div>
