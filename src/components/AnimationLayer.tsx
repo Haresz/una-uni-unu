@@ -11,25 +11,34 @@ const TOKEN_CLASS: Record<string, string> = {
   danger: 'bg-rose-600 text-white ring-rose-200/60',
 };
 
+const VIEWPORT_PADDING = 8;
+
 function centerFallback(): { cx: number; cy: number } {
   return { cx: window.innerWidth / 2, cy: window.innerHeight / 2 };
+}
+
+function clampToViewport(x: number, y: number, width: number, height: number) {
+  const maxX = Math.max(VIEWPORT_PADDING, window.innerWidth - width - VIEWPORT_PADDING);
+  const maxY = Math.max(VIEWPORT_PADDING, window.innerHeight - height - VIEWPORT_PADDING);
+  return {
+    x: Math.min(Math.max(x, VIEWPORT_PADDING), maxX),
+    y: Math.min(Math.max(y, VIEWPORT_PADDING), maxY),
+  };
 }
 
 function FlyingCard({ item }: { item: AnimationItem }) {
   const from = getAnchorRect(item.from) ?? centerFallback();
   const to = getAnchorRect(item.to) ?? from;
   const { w, h } = CARD_SIZE_PX.md;
-  const startX = from.cx - w / 2;
-  const startY = from.cy - h / 2;
-  const endX = to.cx - w / 2;
-  const endY = to.cy - h / 2;
+  const start = clampToViewport(from.cx - w / 2, from.cy - h / 2, w, h);
+  const end = clampToViewport(to.cx - w / 2, to.cy - h / 2, w, h);
 
   return (
     <motion.div
       className="pointer-events-none fixed left-0 top-0 z-[60]"
       style={{ width: w, height: h }}
-      initial={{ x: startX, y: startY, opacity: 0, scale: 0.85, rotate: item.kind === 'play' ? -8 : 8 }}
-      animate={{ x: endX, y: endY, opacity: [0, 1, 1, 0], scale: 1, rotate: 0 }}
+      initial={{ x: start.x, y: start.y, opacity: 0, scale: 0.85, rotate: item.kind === 'play' ? -8 : 8 }}
+      animate={{ x: end.x, y: end.y, opacity: [0, 1, 1, 0], scale: 1, rotate: 0 }}
       transition={{
         duration: item.duration / 1000,
         delay: item.delay / 1000,
