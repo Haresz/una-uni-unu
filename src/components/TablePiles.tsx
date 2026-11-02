@@ -23,7 +23,7 @@ export function TablePiles({ drawCount, discardStack, activeColor, pendingDraw =
   const behind = discardStack.slice(0, -1).slice(-2);
   const glow = CARD_COLOR_VAR[activeColor];
 
-  const drawRef = useCallback((el: HTMLDivElement | null) => setAnchor('draw', el as any), []);
+  const drawRef = useCallback((el: HTMLElement | null) => setAnchor('draw', el as any), []);
   const discardRef = useCallback((el: HTMLDivElement | null) => setAnchor('discard', el), []);
 
   if (mobile) {
@@ -37,9 +37,7 @@ export function TablePiles({ drawCount, discardStack, activeColor, pendingDraw =
           {canDraw && onDraw ? (
             <button
               type="button"
-              ref={(el) => {
-                setAnchor('draw', el as any);
-              }}
+              ref={drawRef}
               onClick={() => {
                 playSound('click');
                 onDraw?.();
@@ -70,7 +68,7 @@ export function TablePiles({ drawCount, discardStack, activeColor, pendingDraw =
               )}
             </button>
           ) : (
-            <div ref={(el) => setAnchor('draw', el as any)} className="relative h-[69px] w-[46px]">
+            <div ref={drawRef} className="relative h-[69px] w-[46px]">
               <div className="absolute inset-0 translate-x-1 translate-y-1 opacity-70">
                 <CardView faceDown size={drawSize} />
               </div>

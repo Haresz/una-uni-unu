@@ -41,7 +41,7 @@ export default function App() {
   const playableIds = useMemo(() => selectPlayableIds(state), [state]);
 
   if (state.phase === 'menu') {
-    return <StartMenu defaultBotCount={2} onStart={startGame} />;
+    return <StartMenu defaultBotCount={2} defaultStackDrawTwo={false} onStart={startGame} />;
   }
 
   const human = state.players[0]!;
