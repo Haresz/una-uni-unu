@@ -137,7 +137,7 @@ export function GameTable({
                 <div
                   key={bot.id}
                   ref={(el) => setAnchor(`seat:${bot.id}`, el)}
-                  className="mb-2"
+                  className="mb-10"
                 >
                   <OpponentZone
                     name={bot.name}
@@ -195,7 +195,7 @@ export function GameTable({
         </div>
 
         {/* Centre of the table - desktop */}
-        <div className="pointer-events-none absolute inset-0 hidden flex-col items-center justify-center gap-4 sm:flex">
+        <div className="pointer-events-none absolute inset-0 hidden flex-col items-center justify-center gap-4 sm:flex  mt-20">
           <TurnBadge
             text={isHumanTurn ? 'Your turn' : `${currentPlayer.name}'s turn`}
             tone={isHumanTurn ? 'you' : 'bot'}

@@ -10,12 +10,13 @@ export interface OpponentZoneProps {
   isTurn: boolean;
   thinking?: boolean;
   mobile?: boolean;
+  isActive?: boolean;
 }
 
 const MAX_VISIBLE_DESKTOP = 6;
 const MAX_VISIBLE_MOBILE = 8;
 
-export function OpponentZone({ name, count, position, isTurn, thinking, mobile = false }: OpponentZoneProps) {
+export function OpponentZone({ name, count, position, isTurn, thinking, mobile = false, isActive = false }: OpponentZoneProps) {
   const maxVisible = mobile ? MAX_VISIBLE_MOBILE : MAX_VISIBLE_DESKTOP;
   const visible = Math.min(count, maxVisible);
   const overflow = count - visible;
@@ -27,12 +28,11 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
     return (
       <div className="flex w-full flex-col items-center justify-center gap-1" data-seat={position}>
         <div
-          className={`flex ${
-            isVertical ? 'flex-col' : 'flex-row'
-          } items-center justify-center rounded-xl p-1 transition-shadow ${
-            isTurn ? 'bg-white/5 shadow-[0_0_0_1px_rgba(253,224,71,0.8),0_0_16px_rgba(253,224,71,0.35)]' : ''
-          }`}
-          style={{ maxWidth: isVertical ? 'var(--side-strip-w,28px)' : '100%' }}
+          className={`opponent-zone flex ${isVertical ? 'flex-col' : 'flex-row'
+            } items-center justify-center rounded-xl p-1 transition-shadow ${isTurn ? 'bg-white/5 shadow-[0_0_0_1px_rgba(253,224,71,0.8),0_0_16px_rgba(253,224,71,0.35)]' : ''
+            } ${isActive || isTurn ? 'is-active' : ''}`}
+          // delete var(--side-strip-w,28px) because in mobile device indicator turn not cover all container 
+          style={{ maxWidth: isVertical ? '' : '100%' }}
         >
           {Array.from({ length: visible }).map((_, index) => (
             <div
@@ -80,9 +80,8 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
   return (
     <div className="flex flex-col items-center gap-2" data-seat={position}>
       <div
-        className={`flex ${layout} items-center justify-center rounded-2xl p-2 transition-shadow ${
-          isTurn ? 'bg-white/5 shadow-[0_0_0_2px_rgba(253,224,71,0.8),0_0_28px_rgba(253,224,71,0.35)]' : ''
-        }`}
+        className={`opponent-zone flex ${layout} items-center justify-center rounded-2xl p-2 transition-shadow ${isTurn ? 'bg-white/5 shadow-[0_0_0_2px_rgba(253,224,71,0.8),0_0_28px_rgba(253,224,71,0.35)]' : ''
+          } ${isActive || isTurn ? 'is-active' : ''}`}
       >
         {Array.from({ length: visible }).map((_, index) => (
           <div
