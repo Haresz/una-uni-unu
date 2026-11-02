@@ -3,6 +3,7 @@ import type { Card as CardModel } from '../engine/types';
 import { setAnchor } from '../animation/anchors';
 import { CARD_SIZE_PX } from './cards/cardTheme';
 import { CardView } from './cards/Card';
+import { FlipCard } from './cards/FlipCard';
 
 export interface PlayerHandProps {
   cards: CardModel[];
@@ -10,6 +11,9 @@ export interface PlayerHandProps {
   selectedId?: string | null;
   interactive?: boolean;
   onSelect?: (cardId: string) => void;
+  dealing?: boolean;
+  visibleCardIds?: ReadonlySet<string>;
+  revealedCardIds?: ReadonlySet<string>;
 }
 
 const CARD_WIDTH = CARD_SIZE_PX.md.w;
@@ -31,8 +35,16 @@ export function PlayerHand({
   selectedId = null,
   interactive = true,
   onSelect,
+  dealing = false,
+  visibleCardIds,
+  revealedCardIds,
 }: PlayerHandProps) {
-  const count = cards.length;
+  const displayedCards = dealing
+    ? visibleCardIds
+      ? cards.filter((card) => visibleCardIds.has(card.id))
+      : []
+    : cards;
+  const count = displayedCards.length;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [availableWidth, setAvailableWidth] = useState(0);
   const handRef = useCallback((el: HTMLDivElement | null) => {
@@ -77,7 +89,7 @@ export function PlayerHand({
       className="relative flex h-[120px] w-full items-end justify-center px-2 pb-[env(safe-area-inset-bottom,6px)] sm:h-[186px]"
     >
       <div className="relative flex h-full w-full items-end justify-center">
-        {cards.map((card, index) => {
+        {displayedCards.map((card, index) => {
           const offset = count <= 1 ? 0 : index - mid;
           const normalized = mid > 0 ? offset / mid : 0;
           const rotation = count > 1 ? normalized * (maxRotation / 2) : 0;
@@ -85,10 +97,13 @@ export function PlayerHand({
           const dip = Math.abs(offset) * DIP_FACTOR * spacingScale;
           const playable = !playableIds || playableIds.has(card.id);
           const selected = selectedId === card.id;
+          const useFlip = dealing && visibleCardIds !== undefined;
+          const faceDown = useFlip && !revealedCardIds?.has(card.id);
 
           return (
             <div
               key={card.id}
+              data-card-id={card.id}
               className="absolute bottom-0 left-1/2 transition-transform duration-200 ease-out"
               style={{
                 transform: `translateX(-50%) translateX(${x}px) translateY(${selected ? SELECTED_LIFT : dip}px) rotate(${rotation}deg)`,
@@ -96,15 +111,19 @@ export function PlayerHand({
                 zIndex: selected ? 999 : index,
               }}
             >
-              <CardView
-                card={card}
-                size="md"
-                interactive={interactive && playable}
-                highlight={interactive && playable}
-                dimmed={!playable}
-                selected={selected}
-                onClick={onSelect ? () => onSelect(card.id) : undefined}
-              />
+              {useFlip ? (
+                <FlipCard card={card} faceDown={faceDown} />
+              ) : (
+                <CardView
+                  card={card}
+                  size="md"
+                  interactive={interactive && playable}
+                  highlight={interactive && playable}
+                  dimmed={!playable}
+                  selected={selected}
+                  onClick={onSelect ? () => onSelect(card.id) : undefined}
+                />
+              )}
             </div>
           );
         })}

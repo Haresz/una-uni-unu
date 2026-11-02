@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { seatAnchor } from '../../animation/anchors';
+import { DEAL_FLIP_DELAY, DEAL_FLIP_DURATION } from '../../animation/timing';
 import { buildAnimations } from '../useAnimationQueue';
 import type { Card, GameEvent } from '../../engine/types';
 
@@ -50,6 +51,31 @@ describe('buildAnimations', () => {
     const animations = buildAnimations(events);
     expect(animations.map((a) => a.delay)).toEqual([0, 55, 110]);
     expect(animations.every((a) => a.faceDown)).toBe(true);
+  });
+
+  it('reveals the opening card after all human flips finish', () => {
+    const events: GameEvent[] = [
+      { type: 'DEAL', playerId: 'human', cardId: 'a' },
+      { type: 'DEAL', playerId: 'bot1', cardId: 'b' },
+      { type: 'DEAL', playerId: 'human', cardId: 'c' },
+      { type: 'REVEAL_INITIAL', cardId: redFive.id, card: redFive },
+      { type: 'SKIP', playerId: 'human' },
+    ];
+    const animations = buildAnimations(events);
+    const deals = animations.filter((item) => item.kind === 'deal');
+    const reveal = animations.find((item) => item.kind === 'play')!;
+    const skip = animations.find((item) => item.kind === 'burst')!;
+    const lastDeal = deals[deals.length - 1]!;
+    const humanDeals = deals.filter((item) => item.to === 'human');
+    const lastHumanDeal = humanDeals[humanDeals.length - 1]!;
+
+    expect(humanDeals.length).toBeGreaterThan(0);
+    expect(reveal.delay).toBeGreaterThan(lastDeal.delay + lastDeal.duration);
+    expect(reveal.delay).toBeGreaterThan(
+      lastHumanDeal.delay + lastHumanDeal.duration + DEAL_FLIP_DELAY + DEAL_FLIP_DURATION,
+    );
+    expect(skip.delay).toBeGreaterThan(reveal.delay + reveal.duration);
+    expect(animations.every((item) => item.initial)).toBe(true);
   });
 
   it('turns call-outs into bursts and ignores bookkeeping events', () => {

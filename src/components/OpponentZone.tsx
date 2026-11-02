@@ -11,12 +11,22 @@ export interface OpponentZoneProps {
   thinking?: boolean;
   mobile?: boolean;
   isActive?: boolean;
+  dealing?: boolean;
 }
 
 const MAX_VISIBLE_DESKTOP = 6;
 const MAX_VISIBLE_MOBILE = 8;
 
-export function OpponentZone({ name, count, position, isTurn, thinking, mobile = false, isActive = false }: OpponentZoneProps) {
+export function OpponentZone({
+  name,
+  count,
+  position,
+  isTurn,
+  thinking,
+  mobile = false,
+  isActive = false,
+  dealing = false,
+}: OpponentZoneProps) {
   const maxVisible = mobile ? MAX_VISIBLE_MOBILE : MAX_VISIBLE_DESKTOP;
   const visible = Math.min(count, maxVisible);
   const overflow = count - visible;
@@ -65,13 +75,17 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
               }}
               title={`${name} · ${count}`}
             >
-              {name} · {count}
+              {`${name} · ${count}`}
             </span>
           ) : (
-            <span className="whitespace-nowrap text-[9px] font-semibold text-white/90">{name} · {count}</span>
+            <span className="whitespace-nowrap text-[9px] font-semibold text-white/90">
+              {`${name} · ${count}`}
+            </span>
           )}
         </div>
-        {isTurn && <TurnBadge text={thinking ? '…' : 'Turn'} tone="bot" pulse className="scale-75" />}
+        {isTurn && !dealing && (
+          <TurnBadge text={thinking ? '…' : 'Turn'} tone="bot" pulse className="scale-75" />
+        )}
       </div>
     );
   }
@@ -111,7 +125,9 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
           {count} cards
         </span>
       </div>
-      {isTurn && <TurnBadge text={thinking ? 'Thinking…' : 'Turn'} tone="bot" pulse />}
+      {isTurn && !dealing && (
+        <TurnBadge text={thinking ? 'Thinking…' : 'Turn'} tone="bot" pulse />
+      )}
     </div>
   );
 }

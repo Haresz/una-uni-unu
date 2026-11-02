@@ -5,7 +5,7 @@
  * (driver, animation queue, sound), and wires store actions to the table's
  * callbacks. No game rules live here.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { playSound } from './audio/soundManager';
 import { AnimationLayer } from './components/AnimationLayer';
 import { AudioControls } from './components/AudioControls';
@@ -15,14 +15,19 @@ import { StartMenu } from './components/StartMenu';
 import { WinScreen } from './components/WinScreen';
 import { currentPlayer } from './engine';
 import { useAnimationQueue } from './hooks/useAnimationQueue';
+import { useDealReveal } from './hooks/useDealReveal';
 import { useGameDriver } from './hooks/useGameDriver';
 import { useSoundEvents } from './hooks/useSoundEvents';
-import { selectPlayableIds, useGameStore } from './store/gameStore';
+import { selectDealing, useAnimationStore } from './store/animationStore';
+import { selectPlayableIds, useGameStore, type StartOptions } from './store/gameStore';
 
 export default function App() {
   const state = useGameStore((s) => s.state);
   const selectedId = useGameStore((s) => s.selectedId);
   const pendingWildId = useGameStore((s) => s.pendingWildId);
+  const animationDealing = useAnimationStore(selectDealing);
+  const [startDealing, setStartDealing] = useState(false);
+  const dealing = startDealing || animationDealing;
 
   const startGame = useGameStore((s) => s.startGame);
   const goToMenu = useGameStore((s) => s.goToMenu);
@@ -35,24 +40,38 @@ export default function App() {
   const catchUno = useGameStore((s) => s.catchUno);
 
   useAnimationQueue();
+  const dealProgress = useDealReveal();
   useGameDriver();
   useSoundEvents();
+
+  const beginGame = (options: StartOptions) => {
+    setStartDealing(true);
+    startGame(options);
+  };
+
+  useEffect(() => {
+    if (animationDealing) setStartDealing(false);
+  }, [animationDealing]);
+
+  useEffect(() => {
+    if (state.phase === 'menu') setStartDealing(false);
+  }, [state.phase]);
 
   const playableIds = useMemo(() => selectPlayableIds(state), [state]);
 
   if (state.phase === 'menu') {
-    return <StartMenu defaultBotCount={2} defaultStackDrawTwo={false} onStart={startGame} />;
+    return <StartMenu defaultBotCount={2} defaultStackDrawTwo={false} onStart={beginGame} />;
   }
 
   const human = state.players[0]!;
   const isHumanTurn = state.phase === 'playing' && currentPlayer(state).id === human.id;
-  const canCallUno = state.unoPending?.playerId === human.id;
+  const canCallUno = !dealing && state.unoPending?.playerId === human.id;
   const catchTargets =
-    state.unoPending && state.unoPending.playerId !== human.id
+    !dealing && state.unoPending && state.unoPending.playerId !== human.id
       ? [state.unoPending.playerId]
       : [];
-  const showDraw = isHumanTurn && state.drawnCardId === null;
-  const showPass = isHumanTurn && state.drawnCardId !== null;
+  const showDraw = !dealing && isHumanTurn && state.drawnCardId === null;
+  const showPass = !dealing && isHumanTurn && state.drawnCardId !== null;
 
   const winner = state.winnerId
     ? state.players.find((player) => player.id === state.winnerId)
@@ -65,7 +84,9 @@ export default function App() {
         state={state}
         playableIds={playableIds}
         selectedId={selectedId}
-        interactive={state.phase === 'playing'}
+        interactive={state.phase === 'playing' && !dealing}
+        dealing={dealing}
+        dealProgress={dealProgress}
         onSelectCard={selectCard}
         onDraw={drawCard}
         onPass={pass}
@@ -102,7 +123,7 @@ export default function App() {
           winnerName={winner.name}
           isHuman={winner.id === human.id}
           onPlayAgain={() =>
-            startGame({ botCount: state.config.botCount, stackDrawTwo: state.config.stackDrawTwo })
+            beginGame({ botCount: state.config.botCount, stackDrawTwo: state.config.stackDrawTwo })
           }
           onBackToMenu={goToMenu}
         />

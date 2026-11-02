@@ -23,8 +23,16 @@ export interface AnimationDescriptor {
   delay: number;
   /** Milliseconds the motion itself takes. */
   duration: number;
+  /** Part of the opening deal batch, used to gate the table until it settles. */
+  initial?: boolean;
 }
 
 export interface AnimationItem extends AnimationDescriptor {
   id: number;
+}
+
+export interface DealRevealProgress {
+  visibleHumanIds: ReadonlySet<string>;
+  revealedHumanIds: ReadonlySet<string>;
+  botCounts: Readonly<Record<string, number>>;
 }

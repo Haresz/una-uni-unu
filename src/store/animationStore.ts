@@ -22,7 +22,7 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
     const withIds: AnimationItem[] = incoming.map((item) => ({ ...item, id: nextId++ }));
     set({ items: [...get().items, ...withIds], lastBatchId: batchId });
     for (const item of withIds) {
-      const lifetime = item.delay + item.duration + 120;
+      const lifetime = item.delay + item.duration + (item.kind === 'deal' ? 30 : 120);
       window.setTimeout(() => get().finish(item.id), lifetime);
     }
   },
@@ -35,4 +35,9 @@ export const useAnimationStore = create<AnimationStore>((set, get) => ({
 /** True while any animation is in flight; the driver pauses until it clears. */
 export function selectAnimationsBusy(store: AnimationStore): boolean {
   return store.items.length > 0;
+}
+
+/** True until the opening deal and its reveal/opening effects have finished. */
+export function selectDealing(store: AnimationStore): boolean {
+  return store.items.some((item) => item.initial);
 }

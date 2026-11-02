@@ -1,17 +1,26 @@
 import { useEffect } from 'react';
 import { seatAnchor } from '../animation/anchors';
 import type { AnimationDescriptor } from '../animation/types';
+import { buildDealTimeline } from '../animation/dealTimeline';
+import {
+  BURST,
+  CARD_FLY,
+  DEAL_STAGGER,
+  OPENING_EFFECT_GAP,
+} from '../animation/timing';
 import type { GameEvent } from '../engine/types';
 import { useAnimationStore } from '../store/animationStore';
 import { useGameStore } from '../store/gameStore';
 
-const CARD_FLY = 380;
-const BURST = 820;
-
 /** Turn one batch of engine events into a list of timed animations. */
 export function buildAnimations(events: readonly GameEvent[]): AnimationDescriptor[] {
   const out: AnimationDescriptor[] = [];
+  const timeline = buildDealTimeline(events);
+  const isInitialDeal = timeline !== null;
+  const revealDelay = timeline?.revealDelay ?? 0;
+  const openingEffectDelay = isInitialDeal ? revealDelay + CARD_FLY + OPENING_EFFECT_GAP : 0;
   let dealIndex = 0;
+  let postDealDelay = 0;
 
   for (const event of events) {
     switch (event.type) {
@@ -21,7 +30,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: 'draw',
           to: seatAnchor(event.playerId),
           faceDown: true,
-          delay: dealIndex * 55,
+          delay: timeline?.landings[dealIndex]?.delay ?? dealIndex * DEAL_STAGGER,
           duration: CARD_FLY,
         });
         dealIndex += 1;
@@ -33,9 +42,10 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: 'draw',
           to: 'discard',
           card: event.card,
-          delay: 0,
+          delay: revealDelay,
           duration: CARD_FLY,
         });
+        postDealDelay = openingEffectDelay;
         break;
       }
       case 'PLAY_CARD': {
@@ -44,7 +54,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: seatAnchor(event.playerId),
           to: 'discard',
           card: event.card,
-          delay: 0,
+          delay: postDealDelay,
           duration: CARD_FLY,
         });
         break;
@@ -56,7 +66,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           to: seatAnchor(event.playerId),
           card: event.playerId === 'human' ? event.card : null,
           faceDown: event.playerId !== 'human',
-          delay: 0,
+          delay: postDealDelay,
           duration: CARD_FLY,
         });
         break;
@@ -68,7 +78,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
             from: 'draw',
             to: seatAnchor(event.targetId),
             faceDown: true,
-            delay: i * 130,
+            delay: postDealDelay + i * 130,
             duration: CARD_FLY,
           });
         }
@@ -80,7 +90,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: seatAnchor(event.playerId),
           label: 'Skipped!',
           tone: 'info',
-          delay: 0,
+          delay: postDealDelay,
           duration: BURST,
         });
         break;
@@ -91,7 +101,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: 'discard',
           label: 'Reverse!',
           tone: 'info',
-          delay: 0,
+          delay: postDealDelay,
           duration: BURST,
         });
         break;
@@ -101,7 +111,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           kind: 'wild',
           from: 'discard',
           color: event.color,
-          delay: 0,
+          delay: postDealDelay,
           duration: 640,
         });
         break;
@@ -112,7 +122,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: seatAnchor(event.playerId),
           label: 'UNO!',
           tone: 'uno',
-          delay: 0,
+          delay: postDealDelay,
           duration: BURST,
         });
         break;
@@ -123,7 +133,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: seatAnchor(event.playerId),
           label: `Caught! +${event.count}`,
           tone: 'danger',
-          delay: 0,
+          delay: postDealDelay,
           duration: BURST,
         });
         break;
@@ -134,7 +144,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
           from: 'draw',
           label: 'Reshuffling…',
           tone: 'info',
-          delay: 0,
+          delay: postDealDelay,
           duration: BURST,
         });
         break;
@@ -144,7 +154,7 @@ export function buildAnimations(events: readonly GameEvent[]): AnimationDescript
     }
   }
 
-  return out;
+  return isInitialDeal ? out.map((item) => ({ ...item, initial: true })) : out;
 }
 
 /**

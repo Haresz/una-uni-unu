@@ -69,4 +69,49 @@ describe('GameTable', () => {
     expect(html).toContain('Discard');
     expect(html).toContain('Your turn');
   });
+
+  it('reveals dealt cards progressively', () => {
+    const state = makeDemoState(2);
+    const human = state.players[0]!;
+    const first = human.hand[0]!;
+    const second = human.hand[1]!;
+    const bot = state.players.find((player) => player.isBot)!;
+    const html = renderToString(
+      <GameTable
+        state={state}
+        dealing
+        dealProgress={{
+          visibleHumanIds: new Set([first.id]),
+          revealedHumanIds: new Set(),
+          botCounts: { [bot.id]: 2 },
+        }}
+      />,
+    );
+
+    expect(html).toContain('Dealing');
+    expect(html).toContain(`data-card-id="${first.id}"`);
+    expect(html).not.toContain(`data-card-id="${second.id}"`);
+    expect(html).toContain('data-face-down="true"');
+    expect(html).toMatch(/2<!-- --> cards/);
+    expect(html).toMatch(/0<!-- --> cards/);
+  });
+
+  it('flips landed human cards face up', () => {
+    const state = makeDemoState(2);
+    const first = state.players[0]!.hand[0]!;
+    const html = renderToString(
+      <GameTable
+        state={state}
+        dealing
+        dealProgress={{
+          visibleHumanIds: new Set([first.id]),
+          revealedHumanIds: new Set([first.id]),
+          botCounts: {},
+        }}
+      />,
+    );
+
+    expect(html).toContain(`data-card-id="${first.id}"`);
+    expect(html).toContain('data-face-down="false"');
+  });
 });

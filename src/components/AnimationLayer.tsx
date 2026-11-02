@@ -32,18 +32,25 @@ function FlyingCard({ item }: { item: AnimationItem }) {
   const { w, h } = CARD_SIZE_PX.md;
   const start = clampToViewport(from.cx - w / 2, from.cy - h / 2, w, h);
   const end = clampToViewport(to.cx - w / 2, to.cy - h / 2, w, h);
+  const isDeal = item.kind === 'deal';
 
   return (
     <motion.div
       className="pointer-events-none fixed left-0 top-0 z-[60]"
       style={{ width: w, height: h }}
       initial={{ x: start.x, y: start.y, opacity: 0, scale: 0.85, rotate: item.kind === 'play' ? -8 : 8 }}
-      animate={{ x: end.x, y: end.y, opacity: [0, 1, 1, 0], scale: 1, rotate: 0 }}
+      animate={{
+        x: end.x,
+        y: end.y,
+        opacity: isDeal ? [0, 1, 1, 1] : [0, 1, 1, 0],
+        scale: 1,
+        rotate: 0,
+      }}
       transition={{
         duration: item.duration / 1000,
         delay: item.delay / 1000,
         ease: 'easeOut',
-        times: [0, 0.18, 0.78, 1],
+        times: isDeal ? [0, 0.18, 0.92, 1] : [0, 0.18, 0.78, 1],
       }}
     >
       <CardView card={item.card ?? undefined} faceDown={item.faceDown} />

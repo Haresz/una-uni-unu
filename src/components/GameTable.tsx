@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import type { Card as CardModel, CardColor, Direction, GameState, Player } from '../engine/types';
 import { playSound } from '../audio/soundManager';
 import { setAnchor } from '../animation/anchors';
+import type { DealRevealProgress } from '../animation/types';
 import { DirectionIndicator } from './DirectionIndicator';
 import { OpponentZone, type SeatPosition } from './OpponentZone';
 import { PlayerHand } from './PlayerHand';
@@ -26,6 +27,8 @@ export interface GameTableProps {
   catchTargets?: string[];
   thinkingPlayerId?: string | null;
   toasts?: ToastItem[];
+  dealing?: boolean;
+  dealProgress?: DealRevealProgress;
   className?: string;
 }
 
@@ -41,23 +44,27 @@ interface SeatProps {
   isTurn: boolean;
   thinking: boolean;
   mobile: boolean;
+  dealing: boolean;
+  dealtCounts?: Readonly<Record<string, number>>;
 }
 
-function Seat({ player, position, isTurn, thinking, mobile }: SeatProps) {
+function Seat({ player, position, isTurn, thinking, mobile, dealing, dealtCounts }: SeatProps) {
   const anchorRef = useCallback(
     (el: HTMLDivElement | null) => setAnchor(`seat:${player.id}`, el),
     [player.id],
   );
+  const count = dealing ? (dealtCounts?.[player.id] ?? 0) : player.hand.length;
 
   return (
     <div ref={anchorRef} className="flex w-full items-center justify-center">
       <OpponentZone
         name={player.name}
-        count={player.hand.length}
+        count={count}
         position={position}
         isTurn={isTurn}
         thinking={thinking}
         mobile={mobile}
+        dealing={dealing}
       />
     </div>
   );
@@ -70,6 +77,8 @@ interface OpponentSeatsProps {
   thinkingPlayerId: string | null;
   region: SeatPosition;
   mobile: boolean;
+  dealing: boolean;
+  dealtCounts?: Readonly<Record<string, number>>;
 }
 
 function OpponentSeats({
@@ -79,6 +88,8 @@ function OpponentSeats({
   thinkingPlayerId,
   region,
   mobile,
+  dealing,
+  dealtCounts,
 }: OpponentSeatsProps) {
   const seats = bots
     .map((bot, index) => ({ bot, position: positions[index] ?? 'top' }))
@@ -96,6 +107,8 @@ function OpponentSeats({
           isTurn={currentPlayerId === bot.id}
           thinking={thinkingPlayerId === bot.id}
           mobile={mobile}
+          dealing={dealing}
+          dealtCounts={dealtCounts}
         />
       ))}
     </div>
@@ -113,6 +126,7 @@ interface TableCenterProps {
   pulse: boolean;
   mobile: boolean;
   canDraw: boolean;
+  dealing: boolean;
   onDraw?: () => void;
 }
 
@@ -127,14 +141,15 @@ function TableCenter({
   pulse,
   mobile,
   canDraw,
+  dealing,
   onDraw,
 }: TableCenterProps) {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center gap-2 sm:gap-4">
       <TurnBadge
-        text={turnText}
-        tone={turnTone}
-        pulse={pulse}
+        text={dealing ? 'Dealing…' : turnText}
+        tone={dealing ? 'neutral' : turnTone}
+        pulse={dealing || pulse}
         className={mobile ? 'scale-90' : ''}
       />
       <div className="relative flex items-center justify-center">
@@ -146,10 +161,10 @@ function TableCenter({
         />
         <div className="relative z-10">
           <TablePiles
-            drawCount={drawCount}
-            discardStack={discardStack}
+            drawCount={dealing ? 0 : drawCount}
+            discardStack={dealing ? [] : discardStack}
             activeColor={activeColor}
-            pendingDraw={pendingDraw}
+            pendingDraw={dealing ? 0 : pendingDraw}
             mobile={mobile}
             canDraw={canDraw}
             onDraw={onDraw}
@@ -167,6 +182,7 @@ interface PlayerControlsProps {
   showPass: boolean;
   canCallUno: boolean;
   isHumanTurn: boolean;
+  dealing: boolean;
   onCatchUno?: (targetId: string) => void;
   onDraw?: () => void;
   onPass?: () => void;
@@ -180,6 +196,7 @@ function PlayerControls({
   showPass,
   canCallUno,
   isHumanTurn,
+  dealing,
   onCatchUno,
   onDraw,
   onPass,
@@ -187,7 +204,9 @@ function PlayerControls({
 }: PlayerControlsProps) {
   return (
     <div className="mb-1 flex flex-wrap items-center justify-center gap-2">
-      <TurnBadge text="You" tone={isHumanTurn ? 'you' : 'neutral'} className="hidden sm:inline-flex" />
+      {!dealing && (
+        <TurnBadge text="You" tone={isHumanTurn ? 'you' : 'neutral'} className="hidden sm:inline-flex" />
+      )}
       {catchTargets.map((targetId) => {
         const target = players.find((player) => player.id === targetId);
         if (!target) return null;
@@ -266,6 +285,8 @@ export function GameTable({
   catchTargets = [],
   thinkingPlayerId = null,
   toasts = [],
+  dealing = false,
+  dealProgress,
   className = '',
 }: GameTableProps) {
   const human = state.players[0]!;
@@ -287,6 +308,8 @@ export function GameTable({
             positions={positions}
             currentPlayerId={currentPlayer.id}
             thinkingPlayerId={thinkingPlayerId}
+            dealing={dealing}
+            dealtCounts={dealProgress?.botCounts}
             region="top"
             mobile={false}
           />
@@ -297,6 +320,8 @@ export function GameTable({
             positions={positions}
             currentPlayerId={currentPlayer.id}
             thinkingPlayerId={thinkingPlayerId}
+            dealing={dealing}
+            dealtCounts={dealProgress?.botCounts}
             region="top"
             mobile
           />
@@ -311,6 +336,8 @@ export function GameTable({
               positions={positions}
               currentPlayerId={currentPlayer.id}
               thinkingPlayerId={thinkingPlayerId}
+              dealing={dealing}
+              dealtCounts={dealProgress?.botCounts}
               region="left"
               mobile={false}
             />
@@ -321,6 +348,8 @@ export function GameTable({
               positions={positions}
               currentPlayerId={currentPlayer.id}
               thinkingPlayerId={thinkingPlayerId}
+              dealing={dealing}
+              dealtCounts={dealProgress?.botCounts}
               region="left"
               mobile
             />
@@ -340,6 +369,7 @@ export function GameTable({
               pulse={!isHumanTurn}
               mobile={false}
               canDraw={false}
+              dealing={dealing}
             />
           </div>
           <div className="flex h-full w-full items-center justify-center sm:hidden">
@@ -354,6 +384,7 @@ export function GameTable({
               pulse={!isHumanTurn}
               mobile
               canDraw={showDraw && interactive}
+              dealing={dealing}
               onDraw={onDraw}
             />
           </div>
@@ -366,6 +397,8 @@ export function GameTable({
               positions={positions}
               currentPlayerId={currentPlayer.id}
               thinkingPlayerId={thinkingPlayerId}
+              dealing={dealing}
+              dealtCounts={dealProgress?.botCounts}
               region="right"
               mobile={false}
             />
@@ -376,6 +409,8 @@ export function GameTable({
               positions={positions}
               currentPlayerId={currentPlayer.id}
               thinkingPlayerId={thinkingPlayerId}
+              dealing={dealing}
+              dealtCounts={dealProgress?.botCounts}
               region="right"
               mobile
             />
@@ -393,6 +428,7 @@ export function GameTable({
           showPass={showPass}
           canCallUno={canCallUno}
           isHumanTurn={isHumanTurn}
+          dealing={dealing}
           onCatchUno={onCatchUno}
           onDraw={onDraw}
           onPass={onPass}
@@ -400,9 +436,12 @@ export function GameTable({
         />
         <PlayerHand
           cards={human.hand}
-          playableIds={playableIds}
+          playableIds={dealing ? undefined : playableIds}
           selectedId={selectedId}
           interactive={interactive && isHumanTurn}
+          dealing={dealing}
+          visibleCardIds={dealProgress?.visibleHumanIds}
+          revealedCardIds={dealProgress?.revealedHumanIds}
           onSelect={
             onSelectCard
               ? (cardId) => {
