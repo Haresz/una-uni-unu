@@ -58,18 +58,17 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
         <div className="flex flex-col items-center justify-center gap-0.5">
           {isVertical ? (
             <span
-              className="max-h-[70px] overflow-hidden text-center text-[9px] font-semibold leading-tight text-white/90"
+              className="whitespace-nowrap text-center text-[9px] font-semibold leading-none text-white/90"
               style={{
                 writingMode: 'vertical-rl',
                 transform: 'rotate(180deg)',
-                maxWidth: '12px',
               }}
               title={`${name} · ${count}`}
             >
-              {name.length > 8 ? name.slice(0, 7) + '…' : name} · {count}
+              {name} · {count}
             </span>
           ) : (
-            <span className="text-[9px] font-semibold text-white/90">{name.slice(0, 8)} · {count}</span>
+            <span className="whitespace-nowrap text-[9px] font-semibold text-white/90">{name} · {count}</span>
           )}
         </div>
         {isTurn && <TurnBadge text={thinking ? '…' : 'Turn'} tone="bot" pulse className="scale-75" />}
@@ -104,9 +103,11 @@ export function OpponentZone({ name, count, position, isTurn, thinking, mobile =
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-white/90">{name}</span>
-        <span className="rounded-full bg-black/40 px-2 py-0.5 text-xs font-bold text-white/90 ring-1 ring-white/15">
+      <div className={position === 'top' ? 'flex items-center gap-2' : 'flex flex-col items-center gap-1'}>
+        <span className="min-w-0 max-w-full truncate text-sm font-semibold text-white/90" title={name}>
+          {name}
+        </span>
+        <span className="whitespace-nowrap rounded-full bg-black/40 px-2 py-0.5 text-xs font-bold text-white/90 ring-1 ring-white/15">
           {count} cards
         </span>
       </div>
